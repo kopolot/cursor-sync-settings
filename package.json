@@ -1,31 +1,21 @@
 {
-	"name": "sync-settings",
-	"displayName": "Sync Settings",
-	"description": "Easily synchronize your settings",
-	"version": "0.21.2",
+	"name": "cursor-sync-settings",
+	"displayName": "Cursor Sync Settings",
+	"description": "Cursor-ready fork of Sync Settings. Synchronizes settings without disabling the agent host.",
+	"version": "0.22.0",
 	"author": {
-		"name": "Baptiste Augrain",
-		"email": "daiyam@zokugun.org"
+		"name": "kopolot"
 	},
-	"publisher": "zokugun",
+	"publisher": "kopolot",
 	"license": "MIT",
-	"homepage": "https://github.com/zokugun/vscode-sync-settings",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/zokugun/vscode-sync-settings.git"
-	},
-	"bugs": {
-		"url": "https://github.com/zokugun/vscode-sync-settings/discussions/categories/issue-triage"
-	},
 	"engines": {
-		"vscode": "^1.65.0"
+		"vscode": "^1.100.0"
 	},
 	"main": "./lib/index.js",
-	"browser": "./lib/index.js",
 	"scripts": {
 		"audit:fix": "npm audit fix --min-release-age=0",
 		"build": "npm run clean && npm run compile:src && npm run bundle",
-		"bundle": "ncc build out/extension --out lib --external sql.js",
+		"bundle": "ncc build out/extension --out lib",
 		"ci:lint": "zizmor .",
 		"ci:lint:fix": "zizmor . --fix=all",
 		"clean": "rimraf lib out .test *.vsix",
@@ -63,7 +53,6 @@
 		"rsync": "0.6.1",
 		"semver": "7.8.5",
 		"simple-git": "3.36.0",
-		"sql.js": "1.14.1",
 		"untildify": "4.0.0",
 		"webdav": "4.11.5",
 		"webdav-fs": "4.0.1",
@@ -78,7 +67,6 @@
 		"@types/node": "20.19.43",
 		"@types/rsync": "0.4.36",
 		"@types/semver": "7.7.1",
-		"@types/sql.js": "1.4.11",
 		"@types/universalify": "1.0.3",
 		"@types/vscode": "1.65.0",
 		"@vercel/ncc": "0.44.0",
@@ -112,6 +100,7 @@
 		},
 		"webdav": {
 			"axios": "0.33.0",
+			"brace-expansion": "2.1.7",
 			"fast-xml-parser": "5.9.3"
 		}
 	},
@@ -119,9 +108,6 @@
 		"@vscode/vsce-sign": true,
 		"keytar": true
 	},
-	"extensionDependencies": [
-		"zokugun.cron-tasks"
-	],
 	"activationEvents": [
 		"onStartupFinished",
 		"onCommand:syncSettings.createProfile",
@@ -148,76 +134,76 @@
 			{
 				"command": "syncSettings.createProfile",
 				"title": "Create a new profile",
-				"category": "Sync Settings"
+				"category": "Cursor Sync Settings"
 			},
 			{
 				"command": "syncSettings.deleteProfile",
 				"title": "Delete a profile",
-				"category": "Sync Settings"
+				"category": "Cursor Sync Settings"
 			},
 			{
 				"command": "syncSettings.download",
 				"title": "Download (repository -> user)",
-				"category": "Sync Settings"
+				"category": "Cursor Sync Settings"
 			},
 			{
 				"command": "syncSettings.listMissingExtensions",
 				"title": "List the missing extensions",
-				"category": "Sync Settings"
+				"category": "Cursor Sync Settings"
 			},
 			{
 				"command": "syncSettings.openProfileDirectory",
 				"title": "Reveal the profile in the file explorer",
-				"category": "Sync Settings"
+				"category": "Cursor Sync Settings"
 			},
 			{
 				"command": "syncSettings.openProfileSettings",
 				"title": "Open the profile settings",
-				"category": "Sync Settings"
+				"category": "Cursor Sync Settings"
 			},
 			{
 				"command": "syncSettings.openRepositoryDirectory",
 				"title": "Reveal the repository in the file explorer",
-				"category": "Sync Settings"
+				"category": "Cursor Sync Settings"
 			},
 			{
 				"command": "syncSettings.openSettings",
 				"title": "Open the repository settings",
-				"category": "Sync Settings"
+				"category": "Cursor Sync Settings"
 			},
 			{
 				"command": "syncSettings.reset",
 				"title": "Remove all settings and extensions",
-				"category": "Sync Settings"
+				"category": "Cursor Sync Settings"
 			},
 			{
 				"command": "syncSettings.restart",
 				"title": "Restart Editor",
-				"category": "Sync Settings"
+				"category": "Cursor Sync Settings"
 			},
 			{
 				"command": "syncSettings.review",
 				"title": "Prompt if a difference between actual and saved settings is been found",
-				"category": "Sync Settings"
+				"category": "Cursor Sync Settings"
 			},
 			{
 				"command": "syncSettings.switchProfile",
 				"title": "Switch to profile",
-				"category": "Sync Settings"
+				"category": "Cursor Sync Settings"
 			},
 			{
 				"command": "syncSettings.upload",
 				"title": "Upload (user -> repository)",
-				"category": "Sync Settings"
+				"category": "Cursor Sync Settings"
 			},
 			{
 				"command": "syncSettings.viewDifferences",
 				"title": "View differences between actual and saved settings",
-				"category": "Sync Settings"
+				"category": "Cursor Sync Settings"
 			}
 		],
 		"configuration": {
-			"title": "Sync Settings",
+			"title": "Cursor Sync Settings",
 			"properties": {
 				"syncSettings.additionalFiles": {
 					"type": "array",
@@ -258,7 +244,7 @@
 						},
 						"upload": {
 							"type": "string",
-							"description": "Automatically upload the settings at the specified time",
+							"description": "Automatically upload the settings. A cron expression, or \"onType\" to upload after the user settings, keybindings, or snippets are saved.",
 							"default": ""
 						}
 					},
@@ -507,8 +493,7 @@
 		}
 	},
 	"extensionKind": [
-		"ui",
-		"workspace"
+		"ui"
 	],
 	"icon": "icon.png",
 	"galleryBanner": {
@@ -519,13 +504,9 @@
 		"Other"
 	],
 	"keywords": [
+		"cursor",
 		"profile",
 		"settings",
 		"sync"
-	],
-	"__metadata": {
-		"id": "96e8e36b-03bd-44a6-b158-b7ad48d2e58f",
-		"publisherDisplayName": "zokugun",
-		"publisherId": "7981b718-ae65-4fd8-ad42-96331c0f9872"
-	}
+	]
 }

@@ -4,7 +4,7 @@ import { Hook } from '../settings.js';
 import { EXTENSION_NAME } from '../utils/constants.js';
 import { Logger } from '../utils/logger.js';
 
-export async function upload(): Promise<void> {
+export async function upload(options?: { quiet?: boolean }): Promise<void> {
 	if(await RepositoryFactory.isDummy()) {
 		return;
 	}
@@ -40,7 +40,7 @@ export async function upload(): Promise<void> {
 		if(await repository.upload()) {
 			await repository.runHook(Hook.PostUpload);
 
-			if(showFinishAlert) {
+			if(showFinishAlert && !options?.quiet) {
 				await window.showInformationMessage('Your settings have been uploaded (user -> repository)');
 			}
 		}

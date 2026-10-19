@@ -6,7 +6,6 @@ import { comment } from '@zokugun/jsonc-preprocessor';
 import { deepEqual } from 'fast-equals';
 import fse from 'fs-extra';
 import globby from 'globby';
-import { type SqlValue } from 'sql.js';
 import untildify from 'untildify';
 import vscode, { type WorkspaceConfiguration } from 'vscode';
 import yaml from 'yaml';
@@ -15,6 +14,8 @@ import { type ExtensionId, type ExtensionList, Repository, Resource } from '../r
 import { Hook, Settings } from '../settings.js';
 import { arrayDiff } from '../utils/array-diff.js';
 import { EXTENSION_NAME } from '../utils/constants.js';
+import { isCursorWorkspaceLayoutKey, readCursorLayout, restoreCursorLayout } from '../utils/cursor-layout.js';
+import { isSyncableBuiltinId } from '../utils/cursor-extension-id.js';
 import { disableExtension } from '../utils/disable-extension.js';
 import { EDITOR_MODE, EditorMode } from '../utils/editor.js';
 import { enableExtension } from '../utils/enable-extension.js';
@@ -715,32 +716,42 @@ export class FileRepository extends Repository {
 		}
 	} // }}}
 
-	protected async listEditorUIStateProperties(userDataPath: string, extensions: ExtensionList | String[]): Promise<Record<string, SqlValue>> { // {{{
+	protected async listEditorUIStateProperties(userDataPath: string, extensions: ExtensionList | String[]): Promise<Record<string, any>> { // {{{
 		const keys = Array.isArray(extensions) ? extensions : [
 			...extensions.disabled.map(({ id }) => id),
 			...extensions.enabled.map(({ id }) => id),
 		];
 
-		const data = await readStateDB(userDataPath, `SELECT key, value FROM ItemTable WHERE key IN ('${keys.join('\', \'')}') OR key LIKE 'workbench.%' ORDER BY key COLLATE NOCASE ASC`);
+		const data = await readStateDB(userDataPath, `SELECT key, value FROM ItemTable WHERE key IN ('${keys.join('\', \'')}') OR key LIKE 'workbench.%' OR key LIKE 'cursor/agentLayout.sidebar%' OR key LIKE 'cursor/editorLayout.sidebar%' ORDER BY key COLLATE NOCASE ASC`);
 		if(!data) {
 			return {};
 		}
 
-		const properties: Record<string, SqlValue> = {};
+		const properties: Record<string, any> = {};
 		const extensionDataPath = await getExtensionDataUri();
 		const homeDirectory = os.homedir();
 
 		for(let [key, value] of data.values) {
-			if(typeof value === 'string') {
-				value = value.replaceAll(extensionDataPath, '%%EXTENSION_DATA_PATH%%');
+			const keyText = String(key);
 
-				if(value.includes(homeDirectory)) {
-					continue;
-				}
+			// Agent transcripts are not layout. Restoring them is what makes a
+			// download look like the chats themselves were replaced.
+			if(keyText.includes('bubbleId') || keyText.includes('agentKv')) {
+				continue;
 			}
 
-			properties[key as string] = value;
+			if(typeof value === 'string') {
+				if(value.includes('bubbleId') || value.includes('agentKv') || value.includes(homeDirectory)) {
+					continue;
+				}
+
+				value = value.replaceAll(extensionDataPath, '%%EXTENSION_DATA_PATH%%');
+			}
+
+			properties[keyText] = value;
 		}
+
+		Object.assign(properties, await readCursorLayout(userDataPath));
 
 		return properties;
 	} // }}}
@@ -1123,6 +1134,10 @@ export class FileRepository extends Repository {
 
 			if(builtin?.disabled) {
 				for(const id of builtin.disabled) {
+					if(!isSyncableBuiltinId(id)) {
+						continue;
+					}
+
 					if(local && !currentlyDisabledBuiltin[id]) {
 						failures = !(await disableExtension(id)) || failures;
 					}
@@ -1180,7 +1195,7 @@ export class FileRepository extends Repository {
 				const toDisable: ExtensionId[] = [...disabled];
 
 				if(builtin?.disabled) {
-					toDisable.push(...builtin.disabled.map((id) => ({ id })));
+					toDisable.push(...builtin.disabled.filter(id => isSyncableBuiltinId(id)).map((id) => ({ id })));
 				}
 
 				if(toDisable.length > 0) {
@@ -1341,6 +1356,10 @@ export class FileRepository extends Repository {
 		let index = 0;
 
 		for(let [key, value] of Object.entries(profile)) {
+			if(isCursorWorkspaceLayoutKey(key)) {
+				continue;
+			}
+
 			values.push(`'${key}', $${index}`);
 
 			if(typeof value === 'string') {
@@ -1355,6 +1374,8 @@ export class FileRepository extends Repository {
 		if(index > 0) {
 			await writeStateDB(userDataPath, `INSERT OR REPLACE INTO ItemTable (key, value) VALUES (${values.join('), (')})`, args);
 		}
+
+		await restoreCursorLayout(userDataPath, profile);
 	} // }}}
 
 	protected async restoreUserSettings(ancestorProfile: string, userDataPath: string): Promise<void> { // {{{
@@ -1499,8 +1520,8 @@ export class FileRepository extends Repository {
 		for(let file of additionalFiles) {
 			file = file.replaceAll('\\', '/');
 
-			if(file.endsWith('/zokugun.sync-settings/settings.yml')) {
-				throw new Error('The file `zokugun.sync-settings/settings.yml` mustn\'t be synchronized.');
+			if(file.endsWith('/zokugun.sync-settings/settings.yml') || file.endsWith('/kopolot.cursor-sync-settings/settings.yml')) {
+				throw new Error('The extension settings.yml mustn\'t be synchronized.');
 			}
 
 			const source = await this.expandPath(file);
@@ -1568,7 +1589,7 @@ export class FileRepository extends Repository {
 				const uiStatePath = path.join(editorDataPath, location, 'globalStorage', 'state.vscdb');
 
 				if(await exists(uiStatePath)) {
-					let properties: Record<string, SqlValue>;
+					let properties: Record<string, any>;
 
 					if(useDefaultFlags?.extensions) {
 						properties = await this.listEditorUIStateProperties(uiStatePath, extensions);

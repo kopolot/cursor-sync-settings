@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.22.0 | 2026-10-17
+- Cursor fork of v0.21.2, published as `kopolot.cursor-sync-settings`
+- never disable built-in `anysphere.*` extensions or ids with an `undefined` publisher
+- read and update `state.vscdb` in place
+- keep `bubbleId` and `agentKv` out of synced UI state
+- `syncSettings.crons.upload` value `onType` uploads after settings, keybindings, or snippets are saved
+- an invalid cron no longer stops activation, and cron expressions no longer block startup when `zokugun.cron-tasks` is missing
+- reuse the repository already configured for `zokugun.sync-settings`
+- save and restore the primary sidebar side, and move it once when the saved side differs
+- require VS Code 1.100 or newer, so `state.vscdb` is updated through Node's built-in SQLite
+- run in the local UI host, so a remote window does not load that SQLite code
+
 ## v0.21.2 | 2026-07-07
 - validate data from `extensions.json`
 

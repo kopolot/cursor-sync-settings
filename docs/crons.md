@@ -13,6 +13,14 @@ Crons
 
 It uses [the cron expression](https://en.wikipedia.org/wiki/Cron) to represent the time to execute the command.
 
+`upload` also accepts `onType`. That is not a cron. The extension then uploads about two seconds after the user `settings.json`, `keybindings.json`, or a file under `snippets` is saved. Saves outside that user directory are ignored. A save that arrives while an upload is running starts one more upload after it finishes. Cron expressions still need the `zokugun.cron-tasks` extension. `onType` does not.
+
+```jsonc
+"syncSettings.crons": {
+    "upload": "onType"
+}
+```
+
 ## How to build a cron expression
 
 The cron expression has five fields separated by spaces:

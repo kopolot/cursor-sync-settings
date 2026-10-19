@@ -1,29 +1,37 @@
-Sync Settings
-=============
+Cursor Sync Settings
+====================
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
-[![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/zokugun.sync-settings?label=VS%20Marketplace)](https://marketplace.visualstudio.com/items?itemName=zokugun.sync-settings)
-[![Open VSX Version](https://img.shields.io/open-vsx/v/zokugun/sync-settings?label=Open%20VSX)](https://open-vsx.org/extension/zokugun/sync-settings)
-[![Ko-fi](https://img.shields.io/badge/donate-ko--fi-green)](https://ko-fi.com/daiyam)
-[![Liberapay](https://img.shields.io/badge/donate-liberapay-green)](https://liberapay.com/daiyam/donate)
-[![Paypal](https://img.shields.io/badge/donate-paypal-green)](https://paypal.me/daiyam99)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/license/mit)
 
-With [Sync Settings](https://github.com/zokugun/vscode-sync-settings), you can synchronize your settings/resources across multiple devices.<br />
+Cursor fork of [Sync Settings](https://github.com/zokugun/vscode-sync-settings) v0.21.2 (MIT, Baptiste Augrain). Same commands and the same `syncSettings.*` settings, built so a download does not turn Cursor's agent host off.
+
+Disable `zokugun.sync-settings` before using this extension. Both installed together write the same enablement list.
+
+What this fork changes:
+
+- built-in extensions from the `anysphere` publisher, and ids with no publisher (`undefined.*`), are never recorded or restored as disabled
+- `state.vscdb` is read and updated in place, so Cursor's multi-gigabyte database is not loaded into one buffer
+- UI state skips values that contain `bubbleId` or `agentKv`
+- `syncSettings.crons.upload` accepts `onType` (upload about two seconds after the user settings, keybindings, or snippets are saved)
+- a bad cron expression is logged and does not stop the extension from activating
+- the first launch copies `settings.yml` and the repository checkout from `zokugun.sync-settings`
+
+With Sync Settings, you can synchronize your settings/resources across multiple devices.<br />
 You can also switch between profiles with their own settings/resources.
-It supports with Visual Studio Code, Eclipse Theia, and other Theia/VSCode derivatives.
+It supports Visual Studio Code, Cursor, Eclipse Theia, and other Theia/VSCode derivatives.
 
 HowTo
 -----
 
 1. configure the repository:
 
-   > &gt; Sync Settings: Open the repository settings
+   > &gt; Cursor Sync Settings: Open the repository settings
 
 2. upload your settings to the repository:
-    > &gt; Sync Settings: Upload (user -> repository)
+    > &gt; Cursor Sync Settings: Upload (user -> repository)
 
 3. download your settings into a new editor:
-    > &gt; Sync Settings: Download (repository -> user)
+    > &gt; Cursor Sync Settings: Download (repository -> user)
 
 Configuration
 -------------
@@ -49,7 +57,7 @@ repository:
 
 You can open that file with the command:
 
-> &gt; Sync Settings: Open the repository settings
+> &gt; Cursor Sync Settings: Open the repository settings
 
 ### Repository types
 
@@ -164,15 +172,15 @@ Saved Extensions
 
 When installing an extension, if a matching `.vsix` is present in the `data/extensions` directory of the profile, that `.vsix` will installed instead of the one found in the marketplace.
 
-You can find the `data/extensions` directory by executing the command `> Sync Settings: Reveal the profile in the file explorer`.
+You can find the `data/extensions` directory by executing the command `> Cursor Sync Settings: Reveal the profile in the file explorer`.
 
 Profiles
 --------
 
 Each profile has its own directory in the repository and can be configured independently of each other.
 
-You can create a new profile with the command `> Sync Settings: Create a new profile`.<br />
-Or switch to an existing one with the command `> Sync Settings: Switch to profile`.
+You can create a new profile with the command `> Cursor Sync Settings: Create a new profile`.<br />
+Or switch to an existing one with the command `> Cursor Sync Settings: Switch to profile`.
 
 ### Profile Inheritance
 
@@ -180,25 +188,25 @@ A profile can extend an existing profile but it's limited to the following resou
 - extensions
 - snippets
 
-You can select the profile to extend from when creating a new profile (command `> Sync Settings: Create a new profile`).<br />
-The command `> Sync Settings: Open the profile settings` will allow you to modify the property `extends`.
+You can select the profile to extend from when creating a new profile (command `> Cursor Sync Settings: Create a new profile`).<br />
+The command `> Cursor Sync Settings: Open the profile settings` will allow you to modify the property `extends`.
 
 Commands
 --------
 
-- `> Sync Settings: Open the repository settings`: open the settings for configuring the repository
-- `> Sync Settings: Upload (user -> repository)`: upload/copy the resources from the user to the repository
-- `> Sync Settings: Download (repository -> user)`: download/copy the resources from the repository to the user
-- `> Sync Settings: View differences between actual and saved settings`: display differences between the actual settings and the saved ones
-- `> Sync Settings: Prompt if a difference between actual and saved settings is been found`: prompt if you want to upload your settings if any difference has been found
-- `> Sync Settings: List the missing extensions`: display the list of missing extensions
-- `> Sync Settings: Create a new profile`: create a new profile
-- `> Sync Settings: Delete a profile`: delete a profile
-- `> Sync Settings: Switch to profile`: switch to the selected profile
-- `> Sync Settings: Open the profile settings`: open the settings for configuring the profile
-- `> Sync Settings: Reveal the profile in the file explorer`: open the profile's local copy in the file explorer
-- `> Sync Settings: Reveal the repository in the file explorer`: open the repository's local copy in the file explorer
-- `> Sync Settings: Remove all settings and extensions`: ⚠️⚠️ remove all your local resources ⚠️⚠️
+- `> Cursor Sync Settings: Open the repository settings`: open the settings for configuring the repository
+- `> Cursor Sync Settings: Upload (user -> repository)`: upload/copy the resources from the user to the repository
+- `> Cursor Sync Settings: Download (repository -> user)`: download/copy the resources from the repository to the user
+- `> Cursor Sync Settings: View differences between actual and saved settings`: display differences between the actual settings and the saved ones
+- `> Cursor Sync Settings: Prompt if a difference between actual and saved settings is been found`: prompt if you want to upload your settings if any difference has been found
+- `> Cursor Sync Settings: List the missing extensions`: display the list of missing extensions
+- `> Cursor Sync Settings: Create a new profile`: create a new profile
+- `> Cursor Sync Settings: Delete a profile`: delete a profile
+- `> Cursor Sync Settings: Switch to profile`: switch to the selected profile
+- `> Cursor Sync Settings: Open the profile settings`: open the settings for configuring the profile
+- `> Cursor Sync Settings: Reveal the profile in the file explorer`: open the profile's local copy in the file explorer
+- `> Cursor Sync Settings: Reveal the repository in the file explorer`: open the repository's local copy in the file explorer
+- `> Cursor Sync Settings: Remove all settings and extensions`: ⚠️⚠️ remove all your local resources ⚠️⚠️
 
 JSONC Attributes
 ----------------

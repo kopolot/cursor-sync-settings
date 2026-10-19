@@ -1,26 +1,62 @@
 import path from 'path';
-import fse from 'fs-extra';
-import initSqlJs, { type QueryExecResult } from 'sql.js';
+import { DatabaseSync } from 'node:sqlite';
 import { exists } from './exists.js';
 
-export async function readStateDB(userDataPath: string, query: string, args?: Record<string, any>): Promise<QueryExecResult | undefined> {
-	const sql = await initSqlJs();
-	const databasePath = path.join(userDataPath, 'globalStorage', 'state.vscdb');
+export type StateValue = string | number | null | Uint8Array;
 
-	if(await exists(databasePath)) {
-		const buffer = await fse.readFile(databasePath);
-		const database = new sql.Database(buffer);
+export type StateQueryResult = {
+	columns: string[];
+	values: any[][];
+};
 
-		try {
-			const result = database.exec(query, args);
-
-			return result[0];
-		}
-		finally {
-			database.close();
-		}
+function asStateValue(value: unknown): any {
+	if(Buffer.isBuffer(value) || value instanceof Uint8Array) {
+		return Buffer.from(value).toString('utf8');
 	}
-	else {
+
+	return value ?? null;
+}
+
+function resolveDatabasePath(userDataPathOrDatabase: string): string {
+	if(userDataPathOrDatabase.endsWith('state.vscdb')) {
+		return userDataPathOrDatabase;
+	}
+
+	return path.join(userDataPathOrDatabase, 'globalStorage', 'state.vscdb');
+}
+
+// sql.js reads the whole state.vscdb into one Buffer. Cursor's database is
+// larger than Node's 2 GiB string/buffer limit (ERR_FS_FILE_TOO_LARGE) because
+// agent transcripts live in it. Query SQLite directly and keep only the rows
+// the caller asked for.
+export async function readStateDB(userDataPath: string, query: string, args?: Record<string, any>): Promise<StateQueryResult | undefined> {
+	const databasePath = resolveDatabasePath(userDataPath);
+
+	if(!(await exists(databasePath))) {
 		return undefined;
+	}
+
+	const database = new DatabaseSync(databasePath, {
+		readOnly: true,
+		timeout: 30_000,
+	});
+
+	try {
+		const statement = database.prepare(query);
+		const rows = args ? statement.all(args) : statement.all();
+
+		if(rows.length === 0) {
+			return undefined;
+		}
+
+		const columns = Object.keys(rows[0] as Record<string, unknown>);
+
+		return {
+			columns,
+			values: rows.map(row => columns.map(column => asStateValue((row as Record<string, unknown>)[column]))),
+		};
+	}
+	finally {
+		database.close();
 	}
 }

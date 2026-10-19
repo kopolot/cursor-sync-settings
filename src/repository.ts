@@ -8,6 +8,7 @@ import { EDITOR_MODE, EditorMode } from './utils/editor.js';
 import { exists } from './utils/exists.js';
 import { getEditorStorage } from './utils/get-editor-storage.js';
 import { getExtensionDataPath } from './utils/get-extension-data-path.js';
+import { isSyncableBuiltinId } from './utils/cursor-extension-id.js';
 import { NIL_UUID } from './utils/nil-uuid.js';
 import { listVSIXExtensions } from './utils/vsix-manager.js';
 
@@ -342,7 +343,7 @@ export abstract class Repository {
 			const pkg = await fse.readJSON(path.join(builtinDataPath, packagePath)) as { name: string; publisher: string; __metadata: { id: string } };
 			const id = `${pkg.publisher}.${pkg.name}`;
 
-			if(!ids[id]) {
+			if(!ids[id] && isSyncableBuiltinId(id)) {
 				builtin.disabled.push(id);
 			}
 
